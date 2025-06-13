@@ -1,25 +1,29 @@
 package model;
 
 public class Account {
-    private String userName ;
-    private String password ;
-    private String fullNumber ;
-    private double balance ;
-    private int age ;
+    // User details
+    private String userName;
+    private String password;
+    private String fullNumber;
+    private double balance;
+    private int age;
 
-
-    public Account(String userName, String password, String fullNumber,  int age) {
+    // Full constructor
+    public Account(String userName, String password, String fullNumber, int age) {
         this.userName = userName;
         this.password = password;
         this.fullNumber = fullNumber;
-        balance = 0;
         this.age = age;
+        this.balance = 0;
     }
 
+    // Minimal constructor (used for login)
     public Account(String userName, String password) {
         this.userName = userName;
         this.password = password;
     }
+
+    // Getters and setters
 
     public String getUserName() {
         return userName;
@@ -60,6 +64,8 @@ public class Account {
     public void setAge(int age) {
         this.age = age;
     }
+
+    // toString override for debugging or printing
 
     @Override
     public String toString() {

@@ -1,32 +1,32 @@
-    package model;
+package model;
 
-    import java.util.ArrayList;
-    import java.util.List;
+import java.util.ArrayList;
+import java.util.List;
 
-    public class EWallet {
-        private final String name= "VODAFONE";
-        private static EWallet instance;
+public class EWallet {
+    public static final String name = "VODAFONE";
 
-        private List<Account> accounts = new ArrayList<>();
+    // Singleton instance
+    private static EWallet instance;
 
-        private EWallet() {
+    // List of all accounts
+    private List<Account> accounts = new ArrayList<>();
+
+    private EWallet() {}
+
+    // Singleton pattern - get instance
+    public static EWallet getInstance() {
+        if (instance == null) {
+            instance = new EWallet();
         }
-
-        public String getName() {
-            return name;
-        }
-
-        public List<Account> getAccounts() {
-            return accounts;
-        }
-
-        public void setAccounts(List<Account> accounts) {
-            this.accounts = accounts;
-        }
-        public static EWallet getInstance() {
-            if (instance == null) {
-                instance = new EWallet();
-            }
-            return instance;
-        }
+        return instance;
     }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public void setAccounts(List<Account> accounts) {
+        this.accounts = accounts;
+    }
+}
