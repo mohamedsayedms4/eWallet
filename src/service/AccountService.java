@@ -2,61 +2,73 @@ package service;
 
 import model.Account;
 
-/**
- * AccountService interface defines the core operations
- * that can be performed on an Account in the EWallet system.
- */
 public interface AccountService {
 
     /**
-     * Creates a new account and adds it to the system.
-     *
-     * @param account the account to be created
-     * @return true if account is successfully created, false otherwise
+     * Creates a new account.
+     * @param account The account to be created.
+     * @return true if the account is successfully created, false otherwise.
      */
     boolean createAccount(Account account);
 
     /**
-     * Validates login credentials for a user.
-     *
-     * @param account the account containing username and password to verify
-     * @return true if login is successful, false otherwise
+     * Verifies login credentials of an account.
+     * @param account The account with username and password to validate.
+     * @return true if the login is successful, false otherwise.
      */
-    boolean login(Account account);
+    boolean LoginAccount(Account account);
 
     /**
-     * Deposits a specified amount into the given user's account.
-     *
-     * @param userName the username of the account
-     * @param amount the amount to be deposited
-     * @return true if deposit is successful, false otherwise
+     * Deposits money into the specified account.
+     * @param account The account to deposit money into.
+     * @param money The amount to deposit.
+     * @return true if the deposit is successful, false otherwise.
      */
-    boolean deposit(String userName, double amount);
+    boolean deposit(Account account, double money);
 
     /**
-     * Withdraws a specified amount from the given user's account.
-     *
-     * @param userName the username of the account
-     * @param amount the amount to be withdrawn
-     * @return true if withdrawal is successful, false otherwise
+     * Withdraws money from the specified account.
+     * @param account The account to withdraw money from.
+     * @param money The amount to withdraw.
+     * @return 1 if success, 0 or negative if failed (e.g. insufficient balance).
      */
-    boolean withdraw(String userName, double amount);
+    int withdraw(Account account, double money);
 
     /**
-     * Transfers a specified amount from one account to another.
-     *
-     * @param fromAccount the username of the sender account
-     * @param toAccount the username of the recipient account
-     * @param amount the amount to be transferred
-     * @return true if transfer is successful, false otherwise
+     * Transfers money from one account to another.
+     * @param from The account to transfer money from.
+     * @param to The account to transfer money to.
+     * @param money The amount to transfer.
+     * @return true if the transfer is successful, false otherwise.
      */
-    boolean transfer(String fromAccount, String toAccount, double amount);
+    boolean transferMoney(Account from, Account to, double money);
 
     /**
-     * Retrieves an account by its username.
-     *
-     * @param username the username to search for
-     * @return the Account object if found, null otherwise
+     * Retrieves the actual account details from the database using an Account object.
+     * @param account An account object containing the username.
+     * @return The full account details if found, null otherwise.
      */
-    Account getAccountByUsername(String username);
+    Account getAccountByUserName(Account account);
+
+    /**
+     * Retrieves the actual account details from the database using a username.
+     * @param userName The username of the account.
+     * @return The full account details if found, null otherwise.
+     */
+    Account getAccountByUserName(String userName);
+
+    /**
+     * Displays the details of the specified account.
+     * @param account The account whose details are to be shown.
+     */
+    void showAccountDetails(Account account);
+
+    /**
+     * Changes the password of the given account.
+     * @param account The account to update.
+     * @param oldPassword The current password.
+     * @param newPassword The new password.
+     * @return true if the password was successfully changed, false otherwise.
+     */
+    boolean changePassword(Account account, String oldPassword, String newPassword);
 }
