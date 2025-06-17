@@ -46,7 +46,7 @@ src/
 3. Run `ApplicationServiceImpl.java`
 
 ```bash
-git clone [repository-url]
+git clone https://github.com/mohamedsayedms4/eWallet.git
 cd e-wallet-system
 # Open in IDE and run main application class
 ```
