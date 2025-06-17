@@ -31,15 +31,14 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public boolean LoginAccount(Account account) {
-        List<Account> accounts = eWallet.getAccounts();
-        for (Account acc : accounts) {
-            if (acc.getUserName().equals(account.getUserName()) &&
-                    acc.getPassword().equals(account.getPassword())) {
-                return true;
-            }
+        int index = checkIfAccountExists(account);
+        if (index == -1) {
+            return false;
         }
-        return false;
+        Account existingAccount = eWallet.getAccounts().get(index);
+        return existingAccount.getPassword().equals(account.getPassword());
     }
+
 
     /**
      * Checks if the account already exists in the system.
