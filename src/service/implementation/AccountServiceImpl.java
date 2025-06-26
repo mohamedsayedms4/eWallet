@@ -12,178 +12,177 @@ public class AccountServiceImpl implements AccountService {
 
     private Scanner scanner = new Scanner(System.in);
     private EWallet eWallet = EWallet.getInstance();
-//    private AccountService accountService = new AccountServiceImpl();
 
-    /**
-     * Creates a new account if it doesn't already exist.
-     */
     @Override
     public boolean createAccount(Account account) {
-        if (checkIfAccountExists(account) != -1) {
+        try {
+            if (checkIfAccountExists(account) != -1) {
+                return false;
+            }
+            eWallet.getAccounts().add(account);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error creating account: " + e.getMessage());
             return false;
         }
-        eWallet.getAccounts().add(account);
-        return true;
     }
 
-    /**
-     * Checks login credentials (username and password).
-     */
     @Override
     public boolean LoginAccount(Account account) {
-        int index = checkIfAccountExists(account);
-        if (index == -1) {
+        try {
+            int index = checkIfAccountExists(account);
+            if (index == -1) return false;
+            Account existingAccount = eWallet.getAccounts().get(index);
+            return existingAccount.getPassword().equals(account.getPassword());
+        } catch (Exception e) {
+            System.out.println("Error during login: " + e.getMessage());
             return false;
         }
-        Account existingAccount = eWallet.getAccounts().get(index);
-        return existingAccount.getPassword().equals(account.getPassword());
     }
 
-
-    /**
-     * Checks if the account already exists in the system.
-     */
     private int checkIfAccountExists(Account account) {
-        List<Account> accounts = eWallet.getAccounts();
-        for (int i = 0; i < accounts.size(); i++) {
-            if (accounts.get(i).getUserName().equals(account.getUserName())) {
-                return i;
+        try {
+            List<Account> accounts = eWallet.getAccounts();
+            for (int i = 0; i < accounts.size(); i++) {
+                if (accounts.get(i).getUserName().equals(account.getUserName())) {
+                    return i;
+                }
             }
+        } catch (Exception e) {
+            System.out.println("Error checking account: " + e.getMessage());
         }
         return -1;
     }
 
-    /**
-     * Adds money to the specified account.
-     */
     @Override
     public boolean deposit(Account account, double money) {
-        int accountIndex = checkIfAccountExists(account);
-        if (accountIndex == -1) {
+        try {
+            int accountIndex = checkIfAccountExists(account);
+            if (accountIndex == -1) return false;
+            Account acc = eWallet.getAccounts().get(accountIndex);
+            acc.setBalance(acc.getBalance() + money);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error during deposit: " + e.getMessage());
             return false;
         }
-        eWallet.getAccounts().get(accountIndex).setBalance(
-                eWallet.getAccounts().get(accountIndex).getBalance() + money
-        );
-        return true;
     }
 
-    /**
-     * Withdraws money from the account if sufficient balance is available.
-     * Return codes:
-     * 1 = account not found
-     * 2 = insufficient balance
-     * 3 = success
-     */
     @Override
     public int withdraw(Account account, double money) {
-        int accountIndex = checkIfAccountExists(account);
-        if (accountIndex == -1) {
+        try {
+            int accountIndex = checkIfAccountExists(account);
+            if (accountIndex == -1) return 1;
+
+            Account acc = eWallet.getAccounts().get(accountIndex);
+            if (acc.getBalance() < money) return 2;
+
+            acc.setBalance(acc.getBalance() - money);
+            return 3;
+        } catch (Exception e) {
+            System.out.println("Error during withdrawal: " + e.getMessage());
             return 1;
         }
-
-        if (!(eWallet.getAccounts().get(accountIndex).getBalance() >= money)) {
-            return 2;
-        }
-
-        eWallet.getAccounts().get(accountIndex).setBalance(
-                eWallet.getAccounts().get(accountIndex).getBalance() - money
-        );
-
-        return 3;
     }
 
-    /**
-     * Transfers money from one account to another.
-     */
     @Override
     public boolean transferMoney(Account from, Account to, double money) {
-        int fromIndex = checkIfAccountExists(from);
-        int toIndex = checkIfAccountExists(to);
+        try {
+            int fromIndex = checkIfAccountExists(from);
+            int toIndex = checkIfAccountExists(to);
 
-        if (fromIndex == -1 || toIndex == -1) {
-            System.out.println("One of the accounts does not exist.");
+            if(fromIndex == toIndex){
+                System.out.println("Error during transfer money");
+                return false;
+            }
+            if (fromIndex == -1 || toIndex == -1) {
+                System.out.println("One of the accounts does not exist.");
+                return false;
+            }
+
+            Account fromAcc = eWallet.getAccounts().get(fromIndex);
+            Account toAcc = eWallet.getAccounts().get(toIndex);
+
+            if (fromAcc.getBalance() < money) {
+                System.out.println("Insufficient balance.");
+                return false;
+            }
+
+            fromAcc.setBalance(fromAcc.getBalance() - money);
+            toAcc.setBalance(toAcc.getBalance() + money);
+
+            System.out.println("Transfer successful.");
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error during transfer: " + e.getMessage());
             return false;
         }
-
-        double fromBalance = eWallet.getAccounts().get(fromIndex).getBalance();
-        if (fromBalance < money) {
-            System.out.println("Insufficient balance.");
-            return false;
-        }
-
-        eWallet.getAccounts().get(fromIndex).setBalance(fromBalance - money);
-
-        double toBalance = eWallet.getAccounts().get(toIndex).getBalance();
-        eWallet.getAccounts().get(toIndex).setBalance(toBalance + money);
-
-        System.out.println("Transfer successful.");
-        return true;
     }
 
-    /**
-     * Retrieves an account by object reference.
-     */
     @Override
     public Account getAccountByUserName(Account account) {
-        int accountIndex = checkIfAccountExists(account);
-        if (accountIndex == -1) {
+        try {
+            int accountIndex = checkIfAccountExists(account);
+            if (accountIndex == -1) return null;
+            return eWallet.getAccounts().get(accountIndex);
+        } catch (Exception e) {
+            System.out.println("Error getting account: " + e.getMessage());
             return null;
         }
-        return eWallet.getAccounts().get(accountIndex);
     }
 
-    /**
-     * Retrieves an account by username string.
-     */
     @Override
     public Account getAccountByUserName(String userName) {
-        for (Account acc : eWallet.getAccounts()) {
-            if (acc.getUserName().equals(userName)) {
-                return acc;
+        try {
+            for (Account acc : eWallet.getAccounts()) {
+                if (acc.getUserName().equals(userName)) {
+                    return acc;
+                }
             }
+        } catch (Exception e) {
+            System.out.println("Error retrieving account by username: " + e.getMessage());
         }
         return null;
     }
 
-    /**
-     * Displays account details.
-     */
     @Override
     public void showAccountDetails(Account account) {
-        getAccountByUserName(account);
-        if (Objects.isNull(account)) {
-            System.out.println("account not exist to show profile details");
-            return;
+        try {
+            if (Objects.isNull(account)) {
+                System.out.println("Account does not exist to show profile details.");
+                return;
+            }
+            System.out.println("-> userName:     " + account.getUserName());
+            System.out.println("-> password:     " + account.getPassword());
+            System.out.println("-> age:          " + account.getAge());
+            System.out.println("-> phone number: " + account.getPhoneNumber());
+            System.out.println("-> Balance:      " + account.getBalance());
+        } catch (Exception e) {
+            System.out.println("Error displaying account details: " + e.getMessage());
         }
-        System.out.println("-> userName:     " + account.getUserName());
-        System.out.println("-> password:     " + account.getPassword());
-        System.out.println("-> age:          " + account.getAge());
-        System.out.println("-> phone number: " + account.getPhoneNumber());
-        System.out.println("-> Balance:      " + account.getBalance());
     }
 
-    /**
-     * Changes password of the account if old password matches.
-     */
     @Override
     public boolean changePassword(Account account, String oldPassword, String newPassword) {
-        int index = checkIfAccountExists(account);
-        if (index == -1) {
-            System.out.println("Account not found.");
+        try {
+            int index = checkIfAccountExists(account);
+            if (index == -1) {
+                System.out.println("Account not found.");
+                return false;
+            }
+
+            Account currentAccount = eWallet.getAccounts().get(index);
+            if (!currentAccount.getPassword().equals(oldPassword)) {
+                System.out.println("Old password is incorrect.");
+                return false;
+            }
+
+            currentAccount.setPassword(newPassword);
+            System.out.println("Password changed successfully.");
+            return true;
+        } catch (Exception e) {
+            System.out.println("Error changing password: " + e.getMessage());
             return false;
         }
-
-        Account currentAccount = eWallet.getAccounts().get(index);
-
-        if (!currentAccount.getPassword().equals(oldPassword)) {
-            System.out.println("Old password is incorrect.");
-            return false;
-        }
-
-        // Optional: You can add new password validation here.
-        currentAccount.setPassword(newPassword);
-        System.out.println("Password changed successfully.");
-        return true;
     }
 }

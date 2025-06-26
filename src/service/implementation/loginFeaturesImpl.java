@@ -4,6 +4,7 @@ import model.Account;
 import service.AccountService;
 import service.loginFeatures;
 
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 /**
@@ -14,162 +15,164 @@ public class loginFeaturesImpl implements loginFeatures {
     AccountService accountService = new AccountServiceImpl();
     private Scanner scanner = new Scanner(System.in);
 
-    /**
-     * Displays and handles the operations available after user login.
-     */
     @Override
     public void loginFeatures(Account account) {
         int counter = 3;
         while (counter != 0) {
-            System.out.println("Please choose:");
-            System.out.println("1. Deposit");
-            System.out.println("2. Withdraw");
-            System.out.println("3. Transfer");
-            System.out.println("4. Show Account Details");
-            System.out.println("5. Change Password");
-            System.out.println("6. Logout");
+            try {
+                System.out.println("Please choose:");
+                System.out.println("1. Deposit");
+                System.out.println("2. Withdraw");
+                System.out.println("3. Transfer");
+                System.out.println("4. Show Account Details");
+                System.out.println("5. Change Password");
+                System.out.println("6. Logout");
 
-            // Validate input is integer
-            if (!scanner.hasNextInt()) {
-                System.out.println("Invalid input. Please enter a number from 1 to 6.");
+                if (!scanner.hasNextInt()) {
+                    System.out.println("Invalid input. Please enter a number from 1 to 6.");
+                    scanner.next(); // clear invalid input
+                    counter--;
+                    continue;
+                }
+
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+
+                switch (choice) {
+                    case 1:
+                        deposit(account);
+                        break;
+                    case 2:
+                        withdraw(account);
+                        break;
+                    case 3:
+                        transfer(account);
+                        break;
+                    case 4:
+                        accountService.showAccountDetails(account);
+                        break;
+                    case 5:
+                        changePassword(account);
+                        break;
+                    case 6:
+                        System.out.println("Logging out...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice.");
+                        counter--;
+                        break;
+                }
+            } catch (InputMismatchException ime) {
+                System.out.println("Invalid input type. Please try again.");
                 scanner.next(); // clear invalid input
                 counter--;
-                continue;
+            } catch (Exception e) {
+                System.out.println("An unexpected error occurred: " + e.getMessage());
+                counter--;
+            }
+        }
+
+        System.out.println("Too many invalid attempts. Please try again later.");
+    }
+
+    private void changePassword(Account account) {
+        try {
+            System.out.println("Enter old password:");
+            String oldPassword = scanner.nextLine();
+
+            System.out.println("Enter new password:");
+            String newPassword = scanner.nextLine();
+
+            boolean changed = accountService.changePassword(account, oldPassword, newPassword);
+            System.out.println(changed ? "Password changed successfully." : "Failed to change password.");
+        } catch (Exception e) {
+            System.out.println("Error while changing password: " + e.getMessage());
+        }
+    }
+
+    private void transfer(Account account) {
+        try {
+            System.out.println("Enter transfer amount:");
+            if (!scanner.hasNextDouble()) {
+                System.out.println("Invalid amount.");
+                scanner.next();
+                return;
+            }
+            double amount = scanner.nextDouble();
+            scanner.nextLine();
+            if (amount <= 0) {
+                System.out.println("Amount must be positive.");
+                return;
             }
 
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
+            System.out.println("Enter recipient username:");
+            String toUserName = scanner.nextLine().trim();
+            Account toAccount = accountService.getAccountByUserName(toUserName);
+            if (toAccount == null) {
+                System.out.println("Recipient not found.");
+                return;
+            }
 
-            switch (choice) {
+            boolean transferred = accountService.transferMoney(account, toAccount, amount);
+            System.out.println(transferred ? "Transfer successful. Balance: " + account.getBalance() : "Transfer failed.");
+        } catch (Exception e) {
+            System.out.println("Error during transfer: " + e.getMessage());
+        }
+    }
+
+    private void withdraw(Account account) {
+        try {
+            System.out.println("Enter withdrawal amount:");
+            if (!scanner.hasNextDouble()) {
+                System.out.println("Invalid amount.");
+                scanner.next();
+                return;
+            }
+            double amount = scanner.nextDouble();
+            scanner.nextLine();
+            if (amount <= 0) {
+                System.out.println("Amount must be positive.");
+                return;
+            }
+
+            int result = accountService.withdraw(account, amount);
+            switch (result) {
                 case 1:
-                    deposit(account); // Handle deposit
+                    System.out.println("Account not found.");
                     break;
                 case 2:
-                    withdraw(account); // Handle withdraw
+                    System.out.println("Insufficient balance.");
                     break;
                 case 3:
-                    transfer(account); // Handle transfer
+                    System.out.println("Withdrawal successful. Balance: " + account.getBalance());
                     break;
-                case 4:
-                    accountService.showAccountDetails(account); // Show account info
-                    break;
-                case 5:
-                    changePassword(account); // Handle password change
-                    break;
-                case 6:
-                    System.out.println("Logging out...");
-                    return;
                 default:
-                    System.out.println("Invalid choice.");
-                    counter--;
-                    break;
+                    System.out.println("Withdrawal failed.");
             }
-        }
-
-        if (counter == 0) {
-            System.out.println("Too many invalid attempts. Please try again later.");
+        } catch (Exception e) {
+            System.out.println("Error during withdrawal: " + e.getMessage());
         }
     }
 
-    /**
-     * Allows user to change their password.
-     */
-    private void changePassword(Account account) {
-        System.out.println("Enter old password:");
-        String oldPassword = scanner.nextLine();
-
-        System.out.println("Enter new password:");
-        String newPassword = scanner.nextLine();
-
-        boolean changed = accountService.changePassword(account, oldPassword, newPassword);
-        if (changed) {
-            System.out.println("Password changed successfully.");
-        } else {
-            System.out.println("Failed to change password.");
-        }
-    }
-
-    /**
-     * Transfers money to another account by username.
-     */
-    private void transfer(Account account) {
-        System.out.println("Enter transfer amount:");
-        if (!scanner.hasNextDouble()) {
-            System.out.println("Invalid amount.");
-            scanner.next();
-            return;
-        }
-        double transfer = scanner.nextDouble();
-        scanner.nextLine();
-        if (transfer <= 0) {
-            System.out.println("Amount must be positive.");
-            return;
-        }
-
-        System.out.println("Enter recipient username:");
-        String toUserName = scanner.nextLine().trim();
-        Account toAccount = accountService.getAccountByUserName(toUserName);
-        if (toAccount == null) {
-            System.out.println("Recipient not found.");
-            return;
-        }
-
-        boolean transferred = accountService.transferMoney(account, toAccount, transfer);
-        if (transferred) {
-            System.out.println("Transfer successful. Balance: " + account.getBalance());
-        } else {
-            System.out.println("Transfer failed.");
-        }
-    }
-
-    /**
-     * Handles withdrawal operation for an account.
-     */
-    private void withdraw(Account account) {
-        System.out.println("Enter withdrawal amount:");
-        if (!scanner.hasNextDouble()) {
-            System.out.println("Invalid amount.");
-            scanner.next();
-            return;
-        }
-        double withdraw = scanner.nextDouble();
-        scanner.nextLine();
-        if (withdraw <= 0) {
-            System.out.println("Amount must be positive.");
-            return;
-        }
-
-        int result = accountService.withdraw(account, withdraw);
-        if (result == 1) {
-            System.out.println("Account not found.");
-        } else if (result == 2) {
-            System.out.println("Insufficient balance.");
-        } else {
-            System.out.println("Withdrawal successful. Balance: " + account.getBalance());
-        }
-    }
-
-    /**
-     * Handles deposit operation for an account.
-     */
     private void deposit(Account account) {
-        System.out.println("Enter deposit amount:");
-        if (!scanner.hasNextDouble()) {
-            System.out.println("Invalid amount.");
-            scanner.next();
-            return;
-        }
-        double deposit = scanner.nextDouble();
-        scanner.nextLine();
-        if (deposit <= 0) {
-            System.out.println("Amount must be positive.");
-            return;
-        }
+        try {
+            System.out.println("Enter deposit amount:");
+            if (!scanner.hasNextDouble()) {
+                System.out.println("Invalid amount.");
+                scanner.next();
+                return;
+            }
+            double amount = scanner.nextDouble();
+            scanner.nextLine();
+            if (amount <= 0) {
+                System.out.println("Amount must be positive.");
+                return;
+            }
 
-        if (accountService.deposit(account, deposit)) {
-            System.out.println("Deposit successful. Balance: " + account.getBalance());
-        } else {
-            System.out.println("Deposit failed.");
+            boolean success = accountService.deposit(account, amount);
+            System.out.println(success ? "Deposit successful. Balance: " + account.getBalance() : "Deposit failed.");
+        } catch (Exception e) {
+            System.out.println("Error during deposit: " + e.getMessage());
         }
     }
 }

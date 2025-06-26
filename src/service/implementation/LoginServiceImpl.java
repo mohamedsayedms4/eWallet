@@ -9,7 +9,11 @@ import service.loginFeatures;
 import java.util.Objects;
 import java.util.Scanner;
 
+/**
+ * Implementation of login service that handles user authentication.
+ */
 public class LoginServiceImpl implements LoginService {
+
     private Scanner scanner = new Scanner(System.in);
     private AccountService accountService = new AccountServiceImpl();
     private ValidationService validationService = new ValidationServiceImpl();
@@ -20,28 +24,34 @@ public class LoginServiceImpl implements LoginService {
      */
     @Override
     public void Login() {
-        // Validate login credentials and create an Account object if valid
-        Account account = validationService.validateLoginAccount();
+        try {
+            // Validate login credentials and create an Account object if valid
+            Account account = validationService.validateLoginAccount();
 
-        // If validation fails, exit the method
-        if(Objects.isNull(account)) {
-            return;
-        }
+            // If validation fails, exit the method
+            if (Objects.isNull(account)) {
+                System.out.println("Validation failed. Please try again.");
+                return;
+            }
 
-        // Check if account exists and credentials match
-        boolean isLoginAccount = accountService.LoginAccount(account);
+            // Check if account exists and credentials match
+            boolean isLoginAccount = accountService.LoginAccount(account);
 
-        if (!isLoginAccount) {
-            System.out.println("Invalid username or password");
-        } else {
-            System.out.println("Logged in welcome again " + account.getUserName());
+            if (!isLoginAccount) {
+                System.out.println("Invalid username or password.");
+            } else {
+                System.out.println("Logged in successfully. Welcome back, " + account.getUserName());
 
-            // Retrieve the full account details from the system
-            Account actualAccount = accountService.getAccountByUserName(account);
+                // Retrieve the full account details from the system
+                Account actualAccount = accountService.getAccountByUserName(account);
 
-            // Initialize login features and navigate to logged-in user options
-            loginFeatures loginFeatures = new loginFeaturesImpl();
-            loginFeatures.loginFeatures(actualAccount);
+                // Navigate to logged-in user features
+                loginFeatures loginFeatures = new loginFeaturesImpl();
+                loginFeatures.loginFeatures(actualAccount);
+            }
+
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred during login: " + e.getMessage());
         }
     }
 }
